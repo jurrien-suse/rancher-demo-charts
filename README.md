@@ -1,1 +1,1 @@
-demo-charts
+## Rancher enhanced Helm charts
