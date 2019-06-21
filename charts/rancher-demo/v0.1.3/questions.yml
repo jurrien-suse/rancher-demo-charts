@@ -1,3 +1,8 @@
+categories:
+- demos
+labels:
+  io.rancher.certified: experimental
+namespace: demo-required
 questions:
 - variable: ingress.enabled
   default: "true"
