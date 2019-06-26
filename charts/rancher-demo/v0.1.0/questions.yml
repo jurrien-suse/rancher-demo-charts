@@ -1,4 +1,4 @@
-namespace: longhorn-system
+namespace: forced-namespace
 questions:
 - variable: ingress.enabled
   default: "true"
