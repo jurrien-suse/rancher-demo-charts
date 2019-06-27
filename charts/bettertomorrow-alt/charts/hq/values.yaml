@@ -1,0 +1,3 @@
+# images:
+#   apiMaster: "{{ .Values.registry.url }}/api-master:1.1.3"
+#   dashboardMaster: "{{ .Values.registry.url }}/dashboard-master:1.1.3"

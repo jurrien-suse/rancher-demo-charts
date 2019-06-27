@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: broadcaster
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: broadcaster
+spec:
+  clusterIP: None
+  ports:
+  - name: "bcast-38392"
+    port: 38392
+    targetPort: 38392
+    protocol: TCP
+  selector:
+    run: broadcaster

@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: edge
+    app: edge
+spec:
+  clusterIP: None
+  ports:
+  - name: "proc-4005"
+    port: 4005
+    targetPort: 4005
+    protocol: TCP
+  # - name: "collate-9067"
+  #   port: 9067
+  #   targetPort: 9067
+  #   protocol: TCP
+  # - name: "ta-9068"
+  #   port: 9068
+  #   targetPort: 9068
+  #   protocol: TCP
+  # - name: "reid-9069"
+  #   port: 9069
+  #   targetPort: 9069
+  #   protocol: TCP
+  selector:
+    run: edge

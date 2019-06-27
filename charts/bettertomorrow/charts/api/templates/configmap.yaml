@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    ConfigMap: api-env
+data:
+  MASS_IMPORT_PORT: "9069"
+  PORT: "3000"
+  SECURED_PORT: "5443"
+  VMS_GATEWAY_PORT: "9995"
+  MONGO_DB_PORT: "27017"
+  MONGO_DB_NAME: "anyVision2"
+  #NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  #AUTHORIZED_MODE: "allow"
+  #AUTHORIZED_IPS: "172.14.0.0/16,127.0.0.1"
+  ## logging services (chaperone init)
+  ENABLE_DOCKER_STDOUT: "true"
+  ENABLE_DOCKER_LOG: "true"
+  #LOG_ROTATE_MAX_SIZE: "200m"
+  #LOG_ROTATE_MAX_FILES: "14d"
+  #LOG_ROTATE_DATE_PATTERN: "YYYY-MM-DD"
+  #SEND_IMAGES_IN_BASE64: "false"
+  #PIPE_STATUS_CHECK_HTTP_TIMEOUT_MS: "10"
+  #FORENSICS_CAMERA_SOURCE_HTTP_TIMEOUT_M: "120"
+  #SEND_IMAGES_IN_BASE64: "false"
+  LOG_DIR_PATH: "/var/www/html/api-logs"
+
+  #RMQ_API_HOST: "amqp://rabbitmq-master:5672"
+  RMQ_API_USER: "user"
+  RMQ_API_PASS: "password"
+  RMQ_API_QUEUE_NAME: "api-sync"
+  RMQ_API_NAME: "internal-exchange"
+  RMQ_API_EXCHANGE_BIND_KEY: "site.internal.#"
+  FEATURE_TOGGLE_MASTER: {{ .Values.featureToggle.master | default "false" | quote }}
+  FEATURE_TOGGLE_CRON_JOB: "false"
+  NODE_TLS_REJECT_UNAUTHORIZED: "0"
+  API_IP: "api.{{ .Release.Namespace }}.svc.cluster.local"
+  MONGO_DB_IP: "mongodb.{{ .Release.Namespace }}.svc.cluster.local"
+  CA_HOST: "apigateway.{{ .Release.Namespace }}.svc.cluster.local"
+  MASS_IMPORT_IP: "backend.{{ .Release.Namespace }}.svc.cluster.local"
+  RMQ_API_HOST: "amqp://rabbitmq.{{ .Release.Namespace }}.svc.cluster.local:5672"
+  RUN_AS_USER: "node"
+  TO_DATE_TRACK_DELETE: "30"

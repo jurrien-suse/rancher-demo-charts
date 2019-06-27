@@ -1,0 +1,73 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-api-master
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://hq.tls.ai"
+    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /hq-api/?(.*)
+        backend:
+          serviceName: api-master
+          servicePort: 2000
+      - path: /(socket.io/?.*)
+        backend:
+          serviceName: api-master
+          servicePort: 2000
+  - host: "hq-api.tls.ai"
+    http:
+      paths:
+      - path: /(.*)
+        backend:
+          serviceName: api-master
+          servicePort: 2000
+  tls:
+  - hosts:
+    - "hq-api.tls.ai"
+    secretName: tls-ai-cert
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-dashboard-master
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /(.*)
+        backend:
+          serviceName: dashboard-master
+          servicePort: 80
+  - host: "hq.tls.ai"
+    http:
+      paths:
+      - path: /(.*)
+        backend:
+          serviceName: dashboard-master
+          servicePort: 80
+  tls:
+  - hosts:
+    - "hq.tls.ai"
+    secretName: tls-ai-cert

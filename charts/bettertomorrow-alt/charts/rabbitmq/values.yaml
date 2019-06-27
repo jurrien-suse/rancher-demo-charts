@@ -1,0 +1,2 @@
+# images:
+#   rabbitmq: "{{ .Values.registry.url }}/rabbitmq:19.05"

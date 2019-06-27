@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: push-notification-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    ConfigMap: push-notification
+data:
+  FIREBASE_ADMIN_TOKEN: "AAAA"
+  RUN_AS_USER: "user"
+  ENABLE_CHOWN: "false"
+  ENABLE_CHMOD: "false"
+  ENABLE_DOCKER_STDOUT: "true"
+  ENABLE_DOCKER_LOG: "true"
+  RMQ_API_USER: "user"
+  RMQ_API_PASS: "password"
+  MONGO_DB_NAME: "push-notifications"
+  MONGO_DB_IP: "mongodb.{{ .Release.Namespace }}.svc.cluster.local"
+  RMQ_API_HOST: "amqp://rabbitmq.{{ .Release.Namespace }}.svc.cluster.local:5672"

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dslr-dashboard-bt-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    ConfigMap: dslr-dashboard-bt-env
+data:
+  DATE_FORMAT: "DD/MM/YYYY HH:mm:ss"
+  #SERVER_BASE_URL: "http://api.{{ .Release.Namespace }}.svc.cluster.local"
+  SERVER_PORT: "3000"

@@ -1,0 +1,2 @@
+# images:
+#   pushNotification: "{{ .Values.registry.url }}/push-notification-service:1.23.0"

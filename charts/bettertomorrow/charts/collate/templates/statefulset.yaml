@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: collate
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: collate
+    app: collate
+spec:
+  selector:
+    matchLabels:
+      app: collate
+  serviceName: "collate"
+  replicas: {{ .Values.replicas | default "1" }}
+  template:
+    metadata:
+      labels:
+        app: collate
+        run: collate
+    spec:
+      hostname: collate
+      restartPolicy: Always
+      #nodeSelector:
+      #  app: "collate"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: collate
+        image: "{{ .Values.global.images.pipe }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        command: ["/bin/containerpilot"]
+        args: ["-config", "/etc/containerpilot.json5"]
+        workingDir: "/root/backend_trunk"
+        ports:
+        - containerPort: 9067
+        - containerPort: 6379
+        readinessProbe:
+          #exec:
+          #  command:
+          #  - /bin/bash
+          #  - '-c'
+          #  - reply=$(curl -k -s -o /dev/null -w %{http_code} https://127.0.0.1:9067/ping); echo $reply ;if [ $reply -lt 200 -o $reply -ge 400 ]; then echo "healthcheck for 127.0.0.1:9067/ping failed" ;exit 1  ; else echo "success healthcheck for 127.0.0.1:9067/ping" ;fi
+          httpGet:
+            path: /ping
+            port: 9067
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 20
+        volumeMounts:
+        - name: license
+          mountPath: "/home/user/license"
+        - name: pipe-data
+          mountPath: "/root/pipe_data"
+        - name: storage-data
+          mountPath: "/var/www/html"
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: collate-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: pod_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate
+      - name: pipe-data
+        emptyDir: {}
+      - name: license
+        hostPath:
+           path: /ssd/license
+           type: DirectoryOrCreate

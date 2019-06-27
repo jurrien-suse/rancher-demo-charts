@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mongodb
+        run: mongodb
+    spec:
+      hostname: mongodb
+      restartPolicy: Always
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: mongodb
+        image: "{{ .Values.global.images.mongodb }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}            
+{{- if .Values.MONGODB_CMD_OVERRIDE }}
+        command: ["/usr/local/bin/upgrade_to_auth.sh"]
+{{- end }}          
+        ports:
+        - containerPort: 27017
+        readinessProbe:
+          exec:
+            command: 
+            - /bin/bash
+            - '-c'
+            - if [[ `mongo admin --authenticationDatabase admin -u $MONGO_INITDB_ROOT_USERNAME
+              -p $MONGO_INITDB_ROOT_PASSWORD--quiet --eval "db.adminCommand('ping').ok"` -eq 0 ]]; then echo "mongodb failed to start";exit 1;  else echo "mongodb is up"; fi
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 10            
+        volumeMounts:
+        - name: mongo-db-data
+          mountPath: "/data/db"
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: global-env
+        env:
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username           
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mongodb-secret
+              key: password                     
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: mongo-db-data
+        hostPath:
+           path: /ssd/mongo_db_data
+           type: DirectoryOrCreate

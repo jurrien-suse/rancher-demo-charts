@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collate-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    ConfigMap: collate-env
+data:
+    #missing env vars from docker buildkit
+    PATH: "/pyconcrete:/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    LD_LIBRARY_PATH: "/usr/local/lib:/usr/local/nvidia/lib:/usr/local/nvidia/lib64"
+
+    CONSUL_KEY_PREFIX: "backend"
+
+    ## services to start (init level)
+    ENABLE_DOCKERIZE: "true"
+    ENABLE_MKDIR: "true"
+    ENABLE_CHMOD: "false"
+    ENABLE_CONFD_TEMPLATER: "true"
+    ENABLE_CONFD: "true"
+    ENABLE_WATCHER: "true"
+    ENABLE_BUFFER_CLEANER: "false"
+    ENABLE_FRAMESTORE_CLEANER: "false"
+    ENABLE_PROCESS_SERVICE: "false"
+    ENABLE_REID_SERVICE: "false"
+    ENABLE_TRACK_ARCHIVE_SERVICE: "false"
+    ENABLE_COLLATE_SERVICE: "true"
+    ENABLE_REDIS_SERVICE: "true"
+    ENABLE_CRON_PIPE_IMG_TEMPORARY: "false"
+    ENABLE_CRON_MASS_IMPORT_REPORTS: "false"
+
+    ## logging services (init level)
+    ENABLE_DOCKER_STDOUT: "true"
+    ENABLE_DOCKER_LOG: "false"
+
+    ## custom_ip_settings.json file
+    flask_port: "4005"
+    api_service_port: "5443"
+    reid_service_port: "9069"
+    collate_service_port: "9067"
+    track_archive_service_port: "9068"
+    redis_port: "6379"
+    mongodb_port: "27017"
+
+    tracking_tracking_storage_dir: "/root/track_archive_service_data/"
+    paths_pipe_uuid_file_path: "/root/pipe_data/pipe_id"
+    paths_custom_ip_settings_path: "/root/pipe_data/custom_ip_settings_file.json"
+
+    ## custom settings
+    REID_DATA_SERVICE_GPU: "0"
+    AGE_EXTRACTION_GPU: "0"
+    FEATURE_EXTRACTION_GPU: "0"
+
+    ## nvidia container runtime, https://github.com/nvidia/nvidia-container-runtime#environment-variables-oci-spec
+    NVIDIA_VISIBLE_DEVICES: "none"
+    #NVIDIA_DRIVER_CAPABILITIES: "all"
+
+    ## log level
+    misc_log_level: "INFO"
+    GLOG_minloglevel: "2"
+
+    ENABLE_OPENSSH_SERVICE: "false"
+    DISPLAY: ":1"
+    external_ip: "edge-0.edge.{{ .Release.Namespace }}.svc.cluster.local"
+    storage_ip: "nginx.{{ .Release.Namespace }}.svc.cluster.local"
+    frame_store_storage_ip: "nginx.{{ .Release.Namespace }}.svc.cluster.local"
+    redis_host: "127.0.0.1"
+    api_service_ip: "api.{{ .Release.Namespace }}.svc.cluster.local"
+    mongodb_host: "mongodb.{{ .Release.Namespace }}.svc.cluster.local"
+    reid_service_ip: "backend.{{ .Release.Namespace }}.svc.cluster.local"
+    collate_service_ip: "collate-0.collate.{{ .Release.Namespace }}.svc.cluster.local"
+    track_archive_service_ip: "backend.{{ .Release.Namespace }}.svc.cluster.local"
+    images_storage_database_host: "seaweedfs-s3.{{ .Release.Namespace }}.svc.cluster.local"
+    images_storage_database_port: "8333"
+    images_storage_storage_type: "s3_objects_storage"
+    frame_store_rtmp_url: "rtstreamer.{{ .Release.Namespace }}.svc.cluster.local"
+    frame_store_rtmp_port: "80"
+    misc_gpu_encoding: "true"
+    memsql_host: "memsql.{{ .Release.Namespace }}.svc.cluster.local"
+    memsql_port: "3306"
+    CHECK_NVIDIA_SMI: "true"

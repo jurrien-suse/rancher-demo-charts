@@ -1,0 +1,2 @@
+# images:
+#   mongodb: "{{ .Values.registry.url }}/mongo:19.06"

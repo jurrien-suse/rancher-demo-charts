@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: memsql-schema
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: backend
+    app: memsql-schema
+spec:
+  backoffLimit: 0
+  #ttlSecondsAfterFinished: 600
+  template:
+    metadata:
+      labels:
+        app: memsql-schema
+        run: memsql-schema
+    spec:
+      hostname: memsql-schema
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      restartPolicy: Never
+      containers:
+      - name: memsql-schema
+        image: "{{ .Values.global.images.memsqlSchema }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: global-env
+        env:
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+        - name: DB_HOST
+          value: memsql.{{ .Release.Namespace }}.svc.cluster.local
+        - name: DB_ACTION
+          value: update
+        - name: DB
+          value: mysql
+        - name: DB_NAME
+          value: tracks_db:1.23.0
+      volumes:
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File

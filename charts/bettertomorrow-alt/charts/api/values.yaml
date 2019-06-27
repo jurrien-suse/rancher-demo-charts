@@ -1,0 +1,6 @@
+# images:
+#   api: "{{ .Values.registry.url }}/api:1.23.0"
+#   supercronic: "{{ .Values.registry.url }}/supercronic:19.05"
+
+featureToggle:
+  master: "false"

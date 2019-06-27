@@ -1,0 +1,3 @@
+# images:
+#   pipe: "{{ .Values.registry.url }}/backend-pyconcrete:1.23.0.5"
+#   supercronic: "{{ .Values.registry.url }}/supercronic:19.05"

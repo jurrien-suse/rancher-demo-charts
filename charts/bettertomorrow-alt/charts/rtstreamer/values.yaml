@@ -1,0 +1,2 @@
+# images:
+#   rtstreamer: "{{ .Values.registry.url }}/node-rtsp-rtmp-server:19.05"

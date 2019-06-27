@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hq
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: hq
+spec:
+  selector:
+    matchLabels:
+      app: hq
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hq
+        run: hq
+    spec:
+      hostname: hq
+      restartPolicy: Always
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: api-master
+        image: "{{ .Values.global.images.apiMaster }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        readinessProbe:
+          httpGet:
+            path: /master
+            port: 2000
+          initialDelaySeconds: 5
+          periodSeconds: 5 
+          successThreshold: 2
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /master
+            port: 2000
+          initialDelaySeconds: 5
+          periodSeconds: 5 
+          successThreshold: 1
+          failureThreshold: 10        
+        ports:
+        - containerPort: 2000
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: storage-data
+          mountPath: /var/www/html
+        envFrom:
+        - configMapRef:
+            name: hq-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: username
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: password
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+        - name: MONGO_DB_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: RMQ_EXCHANGE_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+      - name: dashboard-master
+        image: "{{ .Values.global.images.dashboardMaster }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5 
+          successThreshold: 2
+          failureThreshold: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5 
+          successThreshold: 1
+          failureThreshold: 10        
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: data-volume
+          mountPath: "/data/nginx/cache/"          
+        envFrom:
+        - configMapRef:
+            name: hq-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: data-volume
+        hostPath:
+           path: /ssd/nginx-cache
+           type: DirectoryOrCreate              

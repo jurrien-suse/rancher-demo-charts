@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memsql
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: memsql
+spec:
+  selector:
+    matchLabels:
+      app: memsql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: memsql
+        run: memsql
+    spec:
+      hostname: memsql
+      restartPolicy: Always
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: memsql
+        image: "{{ .Values.global.images.memsql }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: memsql
+          mountPath: "/var/lib/memsql"
+        - name: memsql-backup
+          mountPath: /backup
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true                    
+        envFrom:
+        - configMapRef:
+            name: global-env
+        env:
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+        - name: LICENSE_KEY
+          value: BDk3ZmFhNGU3YmJmOTQ5N2I5N2RmY2E4ZWEzZTAxYjVlAAAAAAAAAAAAAAIAAAAAAAQwNQIZAJGgtcrXzs18QzlKPsIo5SNnwVxqxH6gEwIYbWq/m+E3/flYcFfIm3ERvsxjtlbaz7O5AA==
+        - name: MEMSQL_NODE_ROLE
+          value: AIO
+        - name: JOB_NAME
+          value: memsql
+        - name: MEMSQL_PASSWORD
+          value: password
+        - name: AGG_MEMORY_LIMIT
+          value: "4"
+        - name: LEAF_MEMORY_LIMIT
+          value: "124"
+      volumes:
+      - name: memsql
+        hostPath:
+           path: /ssd/memsql
+           type: DirectoryOrCreate
+      - name: memsql-backup
+        hostPath:
+           path: /storage/memsql_backup
+           type: DirectoryOrCreate
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File           

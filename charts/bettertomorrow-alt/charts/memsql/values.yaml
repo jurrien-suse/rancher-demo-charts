@@ -1,0 +1,2 @@
+# images:
+#   memsql: "{{ .Values.registry.url }}/memsql:19.05"

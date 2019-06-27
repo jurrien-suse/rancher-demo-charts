@@ -1,0 +1,172 @@
+dependencies:
+#  - name: imagepullsecret
+#    repository: file://../charts/imagepullsecret
+#    version: ">=1.23.0"
+#    #condition: imagepull.enabled,global.imagepull.enabled
+#    tags:
+#      - site
+#      - imagepullsecret
+  - name: secrets
+    repository: file://../charts/secrets
+    version: ">=1.23.0"
+    #condition: secrets.enabled,global.secrets.enabled
+    tags:
+      - site
+      - secrets
+  - name: globalconfig
+    repository: file://../charts/globalconfig
+    version: ">=1.23.0"
+    #condition: globalconfig.enabled,global.globalconfig.enabled
+    tags:
+      - site
+      - globalconfig
+  - name: api
+    repository: file://../charts/api
+    version: ">=1.23.0"
+    #condition: api.enabled,global.api.enabled
+    tags:
+      - site
+      - hq
+      - api
+  - name: hq
+    repository: file://../charts/hq
+    version: ">=1.23.0"
+    #condition: hq.enabled,global.hq.enabled
+    tags:
+      - hq
+      - api-master
+  - name: apigateway
+    repository: file://../charts/apigateway
+    version: ">=1.23.0"
+    #condition: apigateway.enabled,global.apigateway.enabled
+    tags:
+      - site
+      - apigateway
+  - name: seaweedfs
+    repository: file://../charts/seaweedfs
+    version: ">=1.23.0"
+    #condition: seaweedfs.enabled,global.seaweedfs.enabled
+    tags:
+      - site
+      - seaweedfs
+  - name: backend
+    repository: file://../charts/backend
+    version: ">=1.23.0"
+    #condition: backend.enabled,global.backend.enabled
+    tags:
+      - site
+      - hq
+      - backend
+  - name: broadcaster
+    repository: file://../charts/broadcaster
+    version: ">=1.23.0"
+    #condition: broadcaster.enabled,global.broadcaster.enabled
+    tags:
+      - site
+      - hq
+      - broadcaster
+#  - name: cluster-local-cert
+#    repository: file://./charts/cluster-local-cert
+#    version: ">=1.23.0"
+#    #condition: certs.enabled,global.certs.enabled
+#    tags:
+#      - site
+#      - hq
+#      - certs
+  - name: consul
+    repository: file://../charts/consul
+    version: ">=0.7.0"
+    #condition: consul.enabled,global.consul.enabled
+    tags:
+      - site
+      - hq
+      - consul
+  - name: edge
+    repository: file://../charts/edge
+    version: ">=1.23.0"
+    #condition: edge.enabled,global.edge.enabled
+    tags:
+      - site
+      - hq
+      - edge
+  - name: collate
+    repository: file://../charts/collate
+    version: ">=1.23.0"
+    #condition: collate.enabled,global.collate.enabled
+    tags:
+      - site
+      - hq
+      - collate
+  - name: master-sync
+    repository: file://../charts/master-sync
+    version: ">=1.23.0"
+    #condition: master-sync.enabled,global.master-sync.enabled
+    tags:
+      - site
+      - master-sync
+  - name: memsql
+    repository: file://../charts/memsql
+    version: ">=1.23.0"
+    #condition: memsql.enabled,global.memsql.enabled
+    tags:
+      - site
+      - memsql
+  - name: memsql-schema
+    repository: file://../charts/memsql-schema
+    version: ">=1.23.0"
+    #condition: memsql-schema.enabled,global.memsql-schema.enabled
+    tags:
+      - site
+      - memsql-schema
+  - name: mongodb
+    repository: file://../charts/mongodb
+    version: ">=1.23.0"
+    #condition: mongodb.enabled,global.mongodb.enabled
+    tags:
+      - site
+      - hq
+      - mongodb
+  - name: nginx
+    repository: file://../charts/nginx
+    version: ">=1.23.0"
+    #condition: nginx.enabled,global.nginx.enabled
+    tags:
+      - site
+      - hq
+      - nginx
+  - name: push-notification
+    repository: file://../charts/push-notification
+    version: ">=1.23.0"
+    #condition: push-notification.enabled,global.push-notification.enabled
+    tags:
+      - site
+      - hq
+      - push-notification
+  - name: rabbitmq
+    repository: file://../charts/rabbitmq
+    version: ">=1.23.0"
+    #condition: rabbitmq.enabled,global.rabbitmq.enabled
+    tags:
+      - site
+      - hq
+      - rabbitmq
+  - name: rtstreamer
+    repository: file://../charts/rtstreamer
+    version: ">=1.23.0"
+    #condition: rtstreamer.enabled,global.rtstreamer.enabled
+    tags:
+      - site
+      - rtstreamer
+  - name: webrtc
+    repository: file://../charts/webrtc
+    version: ">=1.23.0"
+    #condition: webrtc.enabled,global.webrtc.enabled
+    tags:
+      - site
+      - webrtc
+  - name: dslr-dashboard-bt
+    repository: file://../charts/dslr-dashboard-bt
+    version: ">=1.23.0"
+    #condition: dslr-dashboard-bt.enabled,global.dslr-dashboard-bt.enabled
+    tags:
+      - dslr-dashboard-bt

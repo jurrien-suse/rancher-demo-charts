@@ -1,0 +1,107 @@
+# Source: api/templates/track-delete-cronjob.yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: track-delete-cron
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: backend
+    app: track-delete-cron
+spec:
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  schedule: "30 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          nodeSelector:
+            mode: "backend"
+          containers:
+          - name: supercronic-track-delete
+            image: "{{ .Values.global.images.supercronic }}"
+            imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+            readinessProbe:
+              exec:
+                command:
+                - /bin/bash
+                - '-c'
+                - pgrep supercronic
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              successThreshold: 2
+              failureThreshold: 10            
+            volumeMounts:
+            - name: storage-data
+              mountPath: "/var/www/html"
+            - name: tz-config
+              mountPath: "/etc/localtime"
+            command: ["/bin/sh", "-c"]
+            args:
+              - track_delete=$(date --iso-8601=seconds -d "$(curl -s -X GET http://${CONSUL_AGENT}:8500/v1/kv/api-env/TO_DATE_TRACK_DELETE?raw) day ago");
+                echo "Deleting data from $track_delete";
+                curl -v -G -X "DELETE" --data-urlencode "toDate=$track_delete"  http://${API_IP}:3000/detections;
+          volumes:
+          - name: tz-config
+            hostPath:
+              path: /etc/localtime
+              type: File
+          - name: storage-data
+            hostPath:
+              path: /storage
+              type: DirectoryOrCreate
+
+---
+# Source: api/templates/video-delete-cronjob.yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: video-delete-cron
+  labels:
+    tier: backend
+    app: video-delete-cron
+spec:
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          nodeSelector:
+            mode: "backend"
+          containers:
+          - name: supercronic-video-delete
+            image: "{{ .Values.global.images.supercronic }}"
+            imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+            readinessProbe:
+              exec:
+                command: 
+                - /bin/bash
+                - '-c'
+                - pgrep supercronic
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              successThreshold: 2
+              failureThreshold: 10            
+            volumeMounts:
+            - name: storage-data
+              mountPath: "/var/www/html"
+            - name: tz-config
+              mountPath: "/etc/localtime"
+            env:
+            - name: TO_DATE_TRACK_DELETE
+              value: "30"
+            command: ["/usr/bin/find"]
+            args: ["/var/www/html/pipe_store/video", "-mtime", "+$(TO_DATE_TRACK_DELETE)", "-type", "f", "-name", "*.mp4", "-delete", "-print"]
+          restartPolicy: OnFailure
+          volumes:
+          - name: tz-config
+            hostPath:
+              path: /etc/localtime
+              type: File
+          - name: storage-data
+            hostPath:
+              path: /storage
+              type: DirectoryOrCreate

@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: api
+spec:
+  selector:
+    matchLabels:
+      app: api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: api
+        run: api
+    spec:
+      hostname: api
+      restartPolicy: Always
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: api
+        image: "{{ .Values.global.images.api }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: api-3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 2
+          failureThreshold: 10
+        ports:
+        - name: api-3000
+          containerPort: 3000
+        - name: api-5443
+          containerPort: 5443
+        - name: api-38389
+          containerPort: 38389
+        volumeMounts:
+        - name: storage-data
+          mountPath: "/var/www/html"
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: api-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: username
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: password
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate

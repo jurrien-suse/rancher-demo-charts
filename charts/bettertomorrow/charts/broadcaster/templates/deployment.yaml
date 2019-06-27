@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broadcaster
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: frontend
+    app: broadcaster
+spec:
+  selector:
+    matchLabels:
+      app: broadcaster
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: broadcaster
+        run: broadcaster
+    spec:
+      hostname: broadcaster
+      restartPolicy: Always
+      nodeSelector:
+        mode: "backend"
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: broadcaster
+        image: "{{ .Values.global.images.broadcaster }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: 38392
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - '-c'
+            - pgrep node
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 10
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: broadcaster-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: username
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: password
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File

@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: edge
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: edge
+    app: edge
+spec:
+  selector:
+    matchLabels:
+      app: edge
+  serviceName: "edge"
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        app: edge
+        run: edge
+    spec:
+      hostname: edge
+      restartPolicy: Always
+      nodeSelector:
+        app: "edge"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - edge
+            topologyKey: "kubernetes.io/hostname"
+      imagePullSecrets:
+        - name: imagepullsecret
+      # required for multicast
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: edge
+        image: "{{ .Values.global.images.pipe }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        command: ["/bin/containerpilot"]
+        args: ["-config", "/etc/containerpilot.json5"]
+        workingDir: "/root/backend_trunk"
+        ports:
+        - containerPort: 4005
+        - containerPort: 6379
+        - containerPort: 9067
+        - containerPort: 9068
+        - containerPort: 9069
+        volumeMounts:
+        - name: license
+          mountPath: "/home/user/license"
+        - name: pipe-data
+          mountPath: "/root/pipe_data"
+        - name: x11
+          mountPath: "/tmp/.X11-unix"
+        - name: storage-data
+          mountPath: "/var/www/html"
+        - name: dshm
+          mountPath: /dev/shm
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: edge-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: pod_name
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: external_ip
+          value: $(pod_name).edge.{{ .Release.Namespace }}.svc.cluster.local
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      - name: supercronic-edge
+        image: "{{ .Values.global.images.supercronic }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        env:
+        - name: TO_DATE_TRACK_DELETE
+          value: "30"
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password          
+        volumeMounts:
+        - name: storage-data
+          mountPath: "/var/www/html"
+        - name: tz-config
+          mountPath: "/etc/localtime"
+        - name: supercronic-config
+          mountPath: /etc/crontabs/crontab
+          subPath: crontab
+          readOnly: true
+        #command: ["/usr/bin/find"]
+        #args: ["/var/www/html/frame_store", "-mtime", "+$(TO_DATE_TRACK_DELETE)", "-type", "f", "-delete", "-print"]
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate
+        # persistentVolumeClaim:
+        #   claimName: edge-pvc
+      - name: pipe-data
+        hostPath:
+           path: /ssd/pipe_data
+           type: DirectoryOrCreate
+      - name: license
+        hostPath:
+           path: /ssd/license
+           type: DirectoryOrCreate
+      - name: x11
+        hostPath:
+           path: /tmp/.X11-unix
+           type: DirectoryOrCreate
+      - name: supercronic-config
+        configMap:
+          name: supercronic-edge-configmap

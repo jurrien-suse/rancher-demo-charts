@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        run: nginx
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: imagepullsecret
+      containers:
+      - name: nginx
+        image: "{{ .Values.global.images.nginx }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        - containerPort: 1936
+        readinessProbe:
+          httpGet:
+            path: /nginx-health
+            port: 443
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 10
+        volumeMounts:
+        - name: storage-data
+          mountPath: "/opt/nginx/html"
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: nginx-logs
+          mountPath: "/var/log/nginx"
+        envFrom:
+        - configMapRef:
+            name: global-env
+        env:
+        - name: http_bind_port
+          value: "80"
+        - name: https_bind_port
+          value: "443"
+        - name: rtmp_bind_port
+          value: "1936"
+        - name: aws_host
+          value: "seaweedfs-s3.{{ .Release.Namespace }}.svc.cluster.local:8333"
+        - name: aws_access_key
+          value: "{{ .Values.AWS_ACCESS_KEY | default "accessKey1" }}"
+        - name: aws_secret_key
+          value: "{{ .Values.AWS_SECRET_KEY | default "secretKey1" }}"
+        - name: limit_rate_speed
+          value: "0"
+        - name: error_log_level
+          value: "info"
+        #- name: default_dns_resolver
+        #  value: "10.96.0.10"
+        - name: access_log
+          value: "on"
+        - name: rewrite_log
+          value: "on"
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate
+      - name: nginx-logs
+        hostPath:
+           path: /storage/nginx-logs
+           type: DirectoryOrCreate
+        # persistentVolumeClaim:
+        #   claimName: edge-pvc

@@ -1,0 +1,5 @@
+enableProxy: false
+# images:
+#   apigateway: "{{ .Values.registry.url }}/api-gateway:1.23.0"
+#   danteproxy: "{{ .Values.registry.url }}/dante-proxy:19.02"
+#   redis: "{{ .Values.registry.url }}/redis:19.06"

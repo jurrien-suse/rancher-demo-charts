@@ -1,0 +1,130 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    tier: backend
+    #mode: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        #mode: backend
+        run: backend
+        app: backend
+    spec:
+      hostname: backend
+      restartPolicy: Always
+      nodeSelector:
+        backend: "true"
+      imagePullSecrets:
+      - name: imagepullsecret
+      serviceAccountName: read-sa
+      serviceAccount: read-sa
+      initContainers:
+      - name: memsql-wait-for-job
+        image: gcr.io/anyvision-production/init:latest
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        command: ["wait_for.sh"]
+        args: ["job", "memsql-schema"]
+      containers:
+      - name: backend
+        image: "{{ .Values.global.images.pipe }}"
+        imagePullPolicy: {{ .Values.global.pullPolicy | default "IfNotPresent" }}
+        command: ["/bin/containerpilot"]
+        args: ["-config", "/etc/containerpilot.json5"]
+        workingDir: "/root/backend_trunk"
+        ports:
+        #- containerPort: 4005
+        - containerPort: 6379
+        #- containerPort: 9067
+        - containerPort: 9068
+        - containerPort: 9069
+        readinessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - '-c'
+            - /usr/bin/redis-cli PING >/dev/null ;if [ $?  = 0 ];then echo "redis:success healthcheck";for i in 9068 9069 ;do reply=$(curl -k -s -o /dev/null -w %{http_code} https://127.0.0.1:$i/ping); echo $reply ;if [ $reply -lt 200 -o $reply -ge 400 ]; then echo "healthcheck for 127.0.0.1:$i/ping failed" ;exit 1  ; else echo "success healthcheck for 127.0.0.1:$i/ping" ;fi ;done else echo "Redis healthcheck failed,Exiting...";exit 1 ;fi
+          initialDelaySeconds: 20
+          periodSeconds: 5
+          successThreshold: 2
+          failureThreshold: 10
+        volumeMounts:
+        - name: license
+          mountPath: "/home/user/license"
+        - name: pipe-data
+          mountPath: "/root/pipe_data"
+        - name: storage-data
+          mountPath: "/var/www/html"
+        - name: track-archive-service-data
+          mountPath: "/root/track_archive_service_data"
+        - name: reid-service-data
+          mountPath: "/root/reid_service_data"
+        - name: cluster-local-cert-volume
+          mountPath: "/usr/local/share/ca-certificates/cluster.local/"
+          readOnly: true
+        - name: tz-config
+          mountPath: /etc/localtime
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: backend-env
+        - configMapRef:
+            name: global-env
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: CONSUL_AGENT
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: CONSUL_SERVER
+          value: $(CONSUL_AGENT)
+      volumes:
+      - name: cluster-local-cert-volume
+        secret:
+          secretName: cluster-local-cert
+      - name: tz-config
+        hostPath:
+           path: /etc/localtime
+           type: File
+      - name: storage-data
+        hostPath:
+           path: /storage
+           type: DirectoryOrCreate
+        # persistentVolumeClaim:
+        #   claimName: edge-pvc
+      - name: pipe-data
+        emptyDir: {}
+      - name: license
+        hostPath:
+           path: /ssd/license
+           type: DirectoryOrCreate
+      - name: track-archive-service-data
+        hostPath:
+           path: /ssd/track_archive_service_data
+           type: DirectoryOrCreate
+      - name: reid-service-data
+        hostPath:
+           path: /ssd/reid_service_data
+           type: DirectoryOrCreate

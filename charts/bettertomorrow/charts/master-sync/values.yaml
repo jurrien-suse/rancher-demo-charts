@@ -1,0 +1,2 @@
+# images:
+#   mastersync: "{{ .Values.registry.url }}/master-sync-service:1.1.3"
