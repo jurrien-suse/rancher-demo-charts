@@ -1,5 +1,0 @@
-apiVersion: v1
-appVersion: 1.23.0
-description: RTStreamer
-name: rtstreamer
-version: 1.23.0

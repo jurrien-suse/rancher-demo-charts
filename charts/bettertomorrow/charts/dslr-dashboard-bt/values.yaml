@@ -1,2 +1,0 @@
-# images:
-#   dslrDashboardBT: "{{ .Values.registry.url }}/dslr-dashboard-bt:1.0.0"

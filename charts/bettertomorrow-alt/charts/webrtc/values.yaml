@@ -1,3 +1,0 @@
-# images:
-#   webrtcStreamer: "{{ .Values.registry.url }}/webrtc-streamer:1.23.0"
-#   coturn: "{{ .Values.registry.url }}/coturn:19.05"

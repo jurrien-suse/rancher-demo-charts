@@ -1,2 +1,0 @@
-# images:
-#   nginx: "{{ .Values.registry.url }}/nginx:19.04"

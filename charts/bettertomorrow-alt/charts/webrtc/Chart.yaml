@@ -1,5 +1,0 @@
-apiVersion: v1
-appVersion: 1.23.0
-description: WebRTC Streamer
-name: webrtc
-version: 1.23.0

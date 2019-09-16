@@ -1,6 +1,0 @@
-apiVersion: v1
-appVersion: 1.23.0
-description: Better Tomorrow
-icon: http://anyvision.co/boss/wp-content/uploads/2016/01/anyvision_logo_bbw-1.png
-name: bettertomorrow
-version: 1.23.0

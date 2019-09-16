@@ -1,2 +1,0 @@
-# images:
-#   broadcaster: "{{ .Values.registry.url }}/broadcaster:1.23.0"

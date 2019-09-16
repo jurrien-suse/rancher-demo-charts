@@ -1,2 +1,0 @@
-# images:
-#   memsqlSchema: "{{ .Values.registry.url }}/db-migrator:1.23.0.1"
