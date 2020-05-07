@@ -12,13 +12,13 @@ questions:
   type: int
   group: "Horizontal Scaling"
 - variable: coordinator.memory
-  default: 2048
+  default: 4096
   description: "The max heap memory in MB per coordinator"
   label: Coordinator Memory
   type: int
   group: "Coordinator Compute Resources"
 - variable: coordinator.cpu
-  default: 1
+  default: 2
   description: "The amount of CPU resources (num vCPU) to reserve per coordinator"
   label: Coordinator CPU Count
   type: int
@@ -30,13 +30,13 @@ questions:
   type: string
   group: "Coordinator Compute Resources"
 - variable: executor.memory
-  default: 2048
+  default: 4096
   description: "The max heap memory in MB per executor"
   label: Executor Memory
   type: int
   group: "Executor Compute Resources"
 - variable: executor.cpu
-  default: 1
+  default: 2
   description: "The amount of CPU resources (num vCPU) to reserve per executor"
   label: Executor CPU Count
   type: int
