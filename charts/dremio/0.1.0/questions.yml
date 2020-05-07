@@ -1,4 +1,9 @@
 questions:
+- variable: imagePullSecrets
+  type: secret
+  description: "Name of an existing image pull secret"
+  label: Image Pull Secret
+  group: "Images"
 - variable: executor.count
   default: 1
   description: "The number of executors to run"

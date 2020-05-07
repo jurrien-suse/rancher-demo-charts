@@ -3,7 +3,7 @@
 # the pods are using the same version of the software.
 image: dremio/dremio-ee
 imageTag: latest
-#imagePullSecrets: docker
+imagePullSecrets: ""
 
 # Check out Dremio documentation for memory and cpu requirements for
 # the coordinators and the executors.
@@ -106,7 +106,7 @@ serviceType: LoadBalancer
 distStorage:
   # Valid values are local, aws, azure or azureStorage. aws and azure
   # choice requires additional configuration data.
-  type: "aws"
+  type: "local"
   aws: # S3
     bucketName: "YOUR BUCKET"
     path: "/PATH"
