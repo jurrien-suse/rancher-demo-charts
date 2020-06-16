@@ -1,0 +1,60 @@
+questions:
+- variable: executor.count
+  default: 3
+  description: "The number of executors to run"
+  label: Executor Count
+  type: int
+  group: "Horizontal Scaling"
+- variable: coordinator.count
+  default: 3
+  description: "The number of coordinator slaves to run"
+  label: Coordinator Slave Count
+  type: int
+  group: "Horizontal Scaling"
+- variable: coordinator.memory
+  default: 4096
+  description: "The max heap memory in MB per coordinator"
+  label: Coordinator Memory
+  type: int
+  group: "Coordinator Compute Resources"
+- variable: coordinator.cpu
+  default: 2
+  description: "The amount of CPU resources (num vCPU) to reserve per coordinator"
+  label: Coordinator CPU Count
+  type: int
+  group: "Coordinator Compute Resources"
+- variable: coordinator.volumeSize
+  default: "10Gi"
+  description: "The size of the persistent volume created per coordinator"
+  label: Coordinator Volume Size
+  type: string
+  group: "Coordinator Compute Resources"
+- variable: executor.memory
+  default: 4096
+  description: "The max heap memory in MB per executor"
+  label: Executor Memory
+  type: int
+  group: "Executor Compute Resources"
+- variable: executor.cpu
+  default: 2
+  description: "The amount of CPU resources (num vCPU) to reserve per executor"
+  label: Executor CPU Count
+  type: int
+  group: "Executor Compute Resources"
+- variable: executor.volumeSize
+  default: "10Gi"
+  description: "The size of the persistent volume created per executor"
+  label: Executor Volume Size
+  type: string
+  group: "Executor Compute Resources"
+- variable: serviceType
+  default: "LoadBalancer"
+  description: "Service type"
+  type: enum
+  options:
+  - "ClusterIP"
+  - "NodePort"
+  - "LoadBalancer"
+  required: true
+  label: Dremio Service Type
+  group: "Services and Load Balancing"
