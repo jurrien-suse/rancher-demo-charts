@@ -17,3 +17,9 @@ questions:
   type: string
   label: Localized Title
   group: "App Configuration"
+- variable: replicaCount
+  default: 5
+  description: "Replica count this app"
+  type: string
+  label: Replica Count
+  group: "App Configuration"
