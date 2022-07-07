@@ -28,8 +28,9 @@ spec:
   rules:
     - host: {{ .Values.ingress.host | quote }}
       http:
-        paths:
-        - backend:
+        paths: /
+          pathType: Prefix
+          backend:
             service:
               name: {{ $fullName }}
               port:
