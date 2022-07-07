@@ -30,6 +30,6 @@ spec:
       http:
         paths:
         - backend:
-            serviceName: {{ $fullName }}
-            servicePort: http
+            service.name: {{ $fullName }}
+            service.port.name: http
 {{- end }}
